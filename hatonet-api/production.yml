@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+    # server api laravel
+    hatonet-laravel:
+        build:
+            context: .
+            dockerfile: ./Dockerfile
+            args:
+                - ENV=development
+        restart: unless-stopped
+        container_name: hatonet-laravel
+        ports:
+            - 80:80
+        volumes:
+            - ./:/app
+            - ./docker/default.conf:/etc/apache2/sites-enabled/000-default.conf:ro
+        depends_on:
+            - hatonet-db
+        networks:
+            - hatonet-network
+    # server database laravel
+    hatonet-db:
+        image: mariadb
+        container_name: hatonet-db
+        restart: unless-stopped
+        environment:
+            MYSQL_ROOT_PASSWORD: hatonet
+            MYSQL_DATABASE: hatonet
+            MYSQL_USER: hatonet
+            MYSQL_PASSWORD: hatonet
+        volumes:
+            - ./docker/db:/var/lib/mysql
+        ports:
+            - 3306:3306
+        networks:
+            - hatonet-network
+    # server database laravel
+    hatonet-pma:
+        depends_on:
+            - hatonet-db
+        image: phpmyadmin/phpmyadmin
+        container_name: hatonet-pma
+        restart: unless-stopped
+        ports:
+            - 8082:80
+        environment:
+            PMA_HOST: hatonet-db
+            MYSQL_ROOT_PASSWORD: hatonet
+        networks:
+            - hatonet-network
+
+networks:
+    hatonet-network:
+        driver: bridge
